@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script type="text/javascript">
+    var w,h,cxt,time_bar,time_width = 180,h_image_ani,x_image_ani,game_bg,posi = 108,index = 0,time = 0,canvas,startGameBtnX=100,startGameBtnY=240;
+    var holes_x = [98,17,15,30,122,207,200,187,100];
+    var holes_y = [115,160,220,293,273,295,211,141,285];
+    var speed = 1,random_int = 0;
+    var isGrayWolf = false,isHit = false,isGame = false;
+    var score = 0;
+    function init(){ //加载画布和图片素材，绘制开始的场景
+        w = screen.width;
+        h = screen.height;
+        var temp = document.getElementById("canvas");
+        canvas = temp;
+        temp.setAttribute("width",w);
+        temp.setAttribute("height",h);
+        cxt = temp.getContext("2d");
+        game_bg = new Image();
+        game_bg.src = "game_bg.jpg";
+        time_bar = new Image();
+        time_bar.src = "progress.png";
+        h_image_ani= new Image();
+        h_image_ani.src = "h.png";
+        x_image_ani= new Image();
+        x_image_ani.src = "x.png";
+        animate();
+        drawTimeBar();
+        showScore();
+        startGameBtn(true);
+        setCanvansOnclickListener();
+    }
+    function setCanvansOnclickListener(){    // 点击监听
+        canvas.onmousedown = function(e){
+            var e = window.event || e;
+            var rect = this.getBoundingClientRect();
+            var mouseX =e.clientX - rect.left;//获取鼠标在canvsa中的坐标
+            var mouseY =e.clientY - rect.top;
+            if(isGame==false){// 点击游戏开始,判断方式:绘制字体坐标＋字体大小的钜行
+                if(mouseX >= startGameBtnX && mouseX<=(startGameBtnX + 120) && mouseY >= 200 && mouseY <= 240){
+                    isGame = true;
+                    score = 0;
+                    time_width = 180;
+                }
+                return;
+            }
+            if(mouseX >= holes_x[random_int] && mouseY >= holes_y[random_int] && mouseX <= (holes_x[random_int] + 108) && mouseY <= (holes_y[random_int] + 108)){
+                isHit = true;// 图片信息 108 ＊ 108 判断点击的点是否在这个正方形内
+                if(isGrayWolf){// 当前绘制灰太狼
+                    score += 10;
+                }else{ // 当前绘制小灰灰
+                    score -= 10;
+                    if(score<=0){
+                        score = 0;
+                    }
+                }
+            }
+        }
+    }
+    function drawTimeBar(){// 时间条动画
+        cxt.drawImage(game_bg, 0, 0);
+        cxt.drawImage(time_bar,63,66,time_width,16);
+    }
+    function showScore(){// 显示分数
+        cxt.font = "20px Courier New";
+        cxt.fillStyle = "white";
+        cxt.fillText("0"+score, 60, 30);
+    }
+    function drawWolf(index,i,image){// 从洞里出来的狼
+        if(isHit){// 被打中的狼
+            cxt.drawImage(image,(index+5) * 108,0,108,101,holes_x[i],holes_y[i],108,101);
+        }else{
+            cxt.drawImage(image,index * 108,0,108,101,holes_x[i],holes_y[i],108,101);
+        }
+    }
+    function clearCanvas(){// 清除画布
+        cxt.fillStyle="white";
+        cxt.fillRect(0,0,w,h);
+    }
+    function startGameBtn(isShowStart){ // 绘制游戏按钮
+        cxt.font = "30px Courier New";
+        cxt.fillStyle = "yellow";
+        if(isShowStart){// 开始游戏
+            cxt.fillText("开始游戏", startGameBtnX, startGameBtnY);
+        }else{
+            cxt.fillText("游戏结束！", 100, 190);
+            cxt.fillText("继续游戏", startGameBtnX, startGameBtnY);
+        }
+    }
+    function drawAnimation(){    // 绘制所有游戏动画
+        drawTimeBar();    // 绘制时间条
+        time_width--;
+        if(time_width<=0){ // 游戏结束
+            startGameBtn(false);
+            isGame = false;
+        }
+        if(isGrayWolf){    // 绘制灰太狼和小灰灰出现
+            drawWolf(index, random_int,h_image_ani);
+        }else{
+            drawWolf(index, random_int,x_image_ani);
+        }
+        index+=speed;
+        if(index >= 5){
+            speed *= -1;
+        }
+        if(index <= 0){
+            random_int = Math.floor(Math.random()*8);
+            speed*=-1;
+            isHit = false;
+            if(Math.floor(Math.random()*100)<=70){
+                isGrayWolf = true;
+            }else{
+                isGrayWolf = false;
+            }
+        }
+        showScore();
+    }
+    function animate() {
+        requestAnimationFrame(animate);
+        if(isGame){
+            time++;
+            if(time>=10){//  游戏世界绘制
+                time=0;
+                clearCanvas();
+                showScore();
+                drawAnimation();
+            }
+        }
+    }
+
+    </script>
+</head>
+<body onload="init();">
+    <canvas id="canvas"></canvas>
+</body>
+</html>
